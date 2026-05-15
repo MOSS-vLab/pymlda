@@ -16,6 +16,13 @@ def mean(signal):
     signal = np.asarray(signal)
     return np.mean(signal)
 
+def median(signal):
+    """
+    Median value
+    """
+    signal = np.asarray(signal)
+    return np.median(signal)
+
 
 def std(signal):
     """
