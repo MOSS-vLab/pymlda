@@ -2,7 +2,7 @@ import pandas as pd
 
 from pymlda.signal_processing import sliding_window
 
-from pymlda.features.extractor import extract_features
+from extract_time_features import extract_features
 
 
 def extract_features_windowed(

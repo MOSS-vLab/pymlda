@@ -18,7 +18,6 @@ from .time_domain import (
     signal_rate,
 )
 
-
 from .frequency_domain import (
     spectral_mean,
     spectral_variance,
@@ -35,6 +34,15 @@ from .frequency_domain import (
     spectral_rolloff,
 )
 
-from .extractor import extract_features
+# ==========================================================
+# High-level API (extractors)
+# ==========================================================
+
+from .extractor import (
+    extract_features,
+    extract_time_features,
+    extract_spectral_features,
+    extract_frf_features,
+)
 
 from .windowed_extractor import extract_features_windowed
