@@ -17,7 +17,6 @@ from .ml.evaluation.validation import cross_validate
 from .ml.evaluation.reports import generate_classification_report
 from .ml.preprocessing.sampling import UnderSampler
 from .ml.preprocessing.feature_selection import FeatureSelector
-from .ml.preprocessing.time_series import TimeSeriesProcessor
 from .features.extractor import extract_features
 from .features.windowed_extractor import extract_features_windowed
 from .features.feature_manager import FeatureManager
@@ -43,7 +42,6 @@ __all__ = [
     'generate_classification_report',
     'UnderSampler',
     'FeatureSelector',
-    'TimeSeriesProcessor',
     'extract_features',
     'extract_features_windowed',
     'FeatureManager',
