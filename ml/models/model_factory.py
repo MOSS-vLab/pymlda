@@ -1,10 +1,39 @@
-from ml.models.classification_models import get_classification_models
-from ml.models.regression_models import get_regression_model
-from ml.models.clustering_models import get_clustering_model
+# ml/models/model_factory.py
+from .classification import ClassifierFactory
+from .regression import RegressionFactory
+from .clustering import ClusteringFactory
 
-def get_models():
-    return {
-        "classifiers": get_classification_models(),
-        "regressor": get_regression_model(),
-        "cluster": get_clustering_model()
-    }
+def get_models(task='classification', **kwargs):
+    """
+    Fábrica unificada para todos os modelos.
+    
+    Parameters
+    ----------
+    task : str
+        'classification', 'regression', ou 'clustering'
+    **kwargs : dict
+        Parâmetros específicos do modelo
+    
+    Returns
+    -------
+    dict or sklearn model
+    """
+    if task == 'classification':
+        return ClassifierFactory.get_all()
+    elif task == 'regression':
+        return RegressionFactory.get(**kwargs)
+    elif task == 'clustering':
+        return ClusteringFactory.get(**kwargs)
+    else:
+        raise ValueError(f"Task '{task}' não suportada. "
+                        f"Opções: 'classification', 'regression', 'clustering'")
+
+# Para compatibilidade com código existente
+def get_classification_models():
+    return ClassifierFactory.get_all()
+
+def get_regression_model(model_name='rf', **kwargs):
+    return RegressionFactory.get(model_name, **kwargs)
+
+def get_clustering_model(model_name='kmeans', **kwargs):
+    return ClusteringFactory.get(model_name, **kwargs)
