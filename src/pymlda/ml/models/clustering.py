@@ -71,3 +71,89 @@ class ClusteringFactory:
         plt.title('Método do Cotovelo')
         plt.grid(True, alpha=0.3)
         plt.show()
+
+        # ADICIONAR AO FINAL DA CLASSE ClusteringFactory:
+
+    @staticmethod
+    def get_optimal_k(X, max_k=10, random_state=42):
+        """
+        Encontra o número ótimo de clusters usando o método do cotovelo.
+        """
+        wcss = ClusteringFactory.elbow_method(X, max_k, random_state)
+        
+        # Encontrar o ponto de máxima curvatura
+        diffs = np.diff(wcss)
+        diffs2 = np.diff(diffs)
+        
+        # Pular os primeiros pontos para evitar ruído
+        start_idx = 1
+        if len(diffs2) > start_idx:
+            optimal_k = np.argmax(diffs2[start_idx:]) + start_idx + 2
+        else:
+            optimal_k = 2
+        
+        return max(2, min(optimal_k, max_k))
+    
+    @staticmethod
+    def plot_clusters(X, labels, centroids=None, cluster_names=None, 
+                      colors=None, title="Clustering Results", save_path=None):
+        """
+        Plota clusters com cores e nomes personalizados.
+        """
+        if colors is None:
+            colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 
+                     'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray']
+        
+        plt.figure(figsize=(10, 8))
+        
+        unique_labels = np.unique(labels)
+        for i, cluster in enumerate(unique_labels):
+            mask = labels == cluster
+            color = colors[i % len(colors)]
+            label = cluster_names[i] if cluster_names and i < len(cluster_names) else f'Cluster {cluster}'
+            plt.scatter(X[mask, 0], X[mask, 1], s=100, c=color, 
+                       edgecolor='white', linewidth=0.5, label=label)
+        
+        if centroids is not None:
+            plt.scatter(centroids[:, 0], centroids[:, 1], 
+                       s=300, c='red', marker='X', edgecolor='black', 
+                       linewidth=2, label='Centróides')
+        
+        plt.xlabel('Feature 1', fontsize=12)
+        plt.ylabel('Feature 2', fontsize=12)
+        plt.title(title, fontsize=14)
+        plt.legend(loc='best', fontsize=10)
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        
+        if save_path:
+            plt.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight')
+        
+        plt.show()
+    
+    @staticmethod
+    def get_cluster_info(X, labels):
+        """Retorna informações sobre os clusters."""
+        unique_labels = np.unique(labels)
+        info = {}
+        for cluster in unique_labels:
+            mask = labels == cluster
+            cluster_data = X[mask]
+            info[cluster] = {
+                'n_samples': len(cluster_data),
+                'mean': cluster_data.mean(axis=0),
+                'std': cluster_data.std(axis=0)
+            }
+        return info
+    
+    @staticmethod
+    def print_cluster_info(X, labels):
+        """Imprime informações sobre os clusters."""
+        info = ClusteringFactory.get_cluster_info(X, labels)
+        print("\n📊 Informações dos Clusters:")
+        print("=" * 50)
+        for cluster, data in info.items():
+            print(f"\nCluster {cluster}:")
+            print(f"  Nº de amostras: {data['n_samples']}")
+            print(f"  Média: {data['mean']}")
+            print(f"  Desvio: {data['std']}")
