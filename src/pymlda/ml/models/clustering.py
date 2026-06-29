@@ -12,36 +12,44 @@ class ClusteringFactory:
     def get(model_name="kmeans", **kwargs):
         """
         Retorna um clusterizador configurado.
-        
-        Parameters
-        ----------
-        model_name : str
-            Nome do modelo: 'kmeans', 'dbscan', 'agglomerative', 'gmm'
-        **kwargs : dict
-            Parâmetros adicionais para o modelo
         """
+        # Dicionário com os modelos
+        model_classes = {
+            'kmeans': KMeans,
+            'dbscan': DBSCAN,
+            'agglomerative': AgglomerativeClustering,
+            'gmm': GaussianMixture
+        }
+        
+        if model_name not in model_classes:
+            raise ValueError(f"Modelo '{model_name}' não suportado. "
+                           f"Opções: {list(model_classes.keys())}")
+        
+        # Parâmetros padrão por modelo
         default_params = {
             'kmeans': {'n_clusters': 4, 'random_state': 42, 'n_init': 10},
-            'dbscan': {'eps': 0.5, 'min_samples': 5},
-            'agglomerative': {'n_clusters': 4, 'linkage': 'ward'},
+            'dbscan': {'eps': 0.5, 'min_samples': 5},  # <-- SEM 'n_clusters'
+            'agglomerative': {'n_clusters': 4},
             'gmm': {'n_components': 4, 'random_state': 42}
         }
         
-        params = default_params.get(model_name, {})
+        # Combinar parâmetros
+        params = default_params.get(model_name, {}).copy()
         params.update(kwargs)
         
-        models = {
-            'kmeans': KMeans(**params),
-            'dbscan': DBSCAN(**params),
-            'agglomerative': AgglomerativeClustering(**params),
-            'gmm': GaussianMixture(**params)
-        }
+        # CORREÇÃO: Remove parâmetros inválidos para DBSCAN
+        if model_name == 'dbscan':
+            invalid_params = ['n_clusters', 'n_components', 'random_state', 'n_init']
+            for p in invalid_params:
+                if p in params:
+                    del params[p]
         
-        if model_name not in models:
-            raise ValueError(f"Modelo '{model_name}' não suportado. "
-                           f"Opções: {list(models.keys())}")
+        # CORREÇÃO: Remove parâmetros inválidos para Agglomerative
+        if model_name == 'agglomerative':
+            if 'random_state' in params:
+                del params['random_state']
         
-        return models[model_name]
+        return model_classes[model_name](**params)
     
     @staticmethod
     def elbow_method(X, max_k=10, random_state=42):
@@ -60,9 +68,6 @@ class ClusteringFactory:
         plt.plot(range(1, max_k+1), wcss, 'bo-')
         plt.xlabel('Número de Clusters')
         plt.ylabel('WCSS (Inércia)')
-        plt.title('Método do Cotovelo para Clustering')
+        plt.title('Método do Cotovelo')
         plt.grid(True, alpha=0.3)
         plt.show()
-
-# Manter compatibilidade
-KMeansClusterer = ClusteringFactory.get('kmeans')
