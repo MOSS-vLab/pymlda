@@ -15,18 +15,25 @@ class RegressionFactory:
     def get(model_name="rf", **kwargs):
         """
         Retorna um regressor configurado.
-        
-        Parameters
-        ----------
-        model_name : str
-            Nome do modelo: 'linear', 'ridge', 'lasso', 'elastic', 
-            'svr', 'rf', 'gb'
-        **kwargs : dict
-            Parâmetros adicionais para o modelo
         """
-        # Parâmetros padrão otimizados para SHM
+        # Dicionário com os modelos (sem parâmetros)
+        models = {
+            'linear': LinearRegression,
+            'ridge': Ridge,
+            'lasso': Lasso,
+            'elastic': ElasticNet,
+            'svr': SVR,
+            'rf': RandomForestRegressor,
+            'gb': GradientBoostingRegressor
+        }
+        
+        if model_name not in models:
+            raise ValueError(f"Modelo '{model_name}' não suportado. "
+                           f"Opções: {list(models.keys())}")
+        
+        # Parâmetros padrão por modelo
         default_params = {
-            'linear': {},  # <-- NÃO TEM 'kernel'!
+            'linear': {},
             'ridge': {'alpha': 1.0},
             'lasso': {'alpha': 1.0, 'max_iter': 10000},
             'elastic': {'alpha': 1.0, 'l1_ratio': 0.5, 'max_iter': 10000},
@@ -37,33 +44,40 @@ class RegressionFactory:
                    'random_state': 42}
         }
         
-        # Combinar parâmetros padrão com os fornecidos
+        # Combinar parâmetros
         params = default_params.get(model_name, {}).copy()
         params.update(kwargs)
         
         # ============================================================
-        # CORREÇÃO: Remover parâmetros inválidos para cada modelo
+        # CORREÇÃO: Remove parâmetros inválidos para cada modelo
         # ============================================================
         
-        # Para LinearRegression, remover parâmetros que ela não aceita
+        # Para LinearRegression - remove TODOS os parâmetros que não são aceitos
         if model_name == 'linear':
-            invalid_params = ['kernel', 'gamma', 'C', 'epsilon', 'n_estimators', 
-                            'max_depth', 'min_samples_split', 'random_state', 'n_jobs',
-                            'learning_rate', 'alpha', 'l1_ratio', 'max_iter']
+            # Lista de parâmetros que o LinearRegression NÃO aceita
+            invalid_params = [
+                'kernel', 'gamma', 'C', 'epsilon', 'n_estimators', 
+                'max_depth', 'min_samples_split', 'random_state', 'n_jobs',
+                'learning_rate', 'alpha', 'l1_ratio', 'max_iter',
+                'degree', 'coef0', 'tol', 'cache_size', 'verbose',
+                'class_weight', 'decision_function_shape', 'break_ties',
+                'shrinking', 'probability', 'warm_start'
+            ]
             for p in invalid_params:
                 if p in params:
                     del params[p]
+                    print(f"   🔄 Removendo parâmetro inválido: {p}")
         
-        # Para Ridge, Lasso, ElasticNet
+        # Para Ridge, Lasso, ElasticNet - remove parâmetros de outros modelos
         if model_name in ['ridge', 'lasso', 'elastic']:
             invalid_params = ['kernel', 'gamma', 'C', 'epsilon', 'n_estimators',
                             'max_depth', 'min_samples_split', 'random_state', 'n_jobs',
-                            'learning_rate']
+                            'learning_rate', 'degree', 'coef0', 'tol']
             for p in invalid_params:
                 if p in params:
                     del params[p]
         
-        # Para SVR
+        # Para SVR - remove parâmetros de árvores
         if model_name == 'svr':
             invalid_params = ['n_estimators', 'max_depth', 'min_samples_split',
                             'random_state', 'n_jobs', 'learning_rate', 'alpha',
@@ -72,22 +86,8 @@ class RegressionFactory:
                 if p in params:
                     del params[p]
         
-        # Mapeamento de modelos
-        models = {
-            'linear': LinearRegression(**params),
-            'ridge': Ridge(**params),
-            'lasso': Lasso(**params),
-            'elastic': ElasticNet(**params),
-            'svr': SVR(**params),
-            'rf': RandomForestRegressor(**params),
-            'gb': GradientBoostingRegressor(**params)
-        }
-        
-        if model_name not in models:
-            raise ValueError(f"Modelo '{model_name}' não suportado. "
-                           f"Opções: {list(models.keys())}")
-        
-        return models[model_name]
+        # Criar e retornar o modelo
+        return models[model_name](**params)
     
     @staticmethod
     def create_pipeline(model_name="rf", scaler=True, **kwargs):
