@@ -1,66 +1,116 @@
-class PyMLDAPipeline:
+class MLDA:
 
-    def __init__(self, cluster_model, classifiers, regressor=None, evaluator=None):
+    def __init__(
+        self,
+        cluster_model,
+        classifiers=None,
+        regressor=None,
+        evaluator=None,
+    ):
+
         self.cluster_model = cluster_model
-        self.classifiers = classifiers
+        self.classifiers = classifiers or {}
         self.regressor = regressor
         self.evaluator = evaluator
 
-    # =========================
-    # 1. FIT (TREINO GERAL)
-    # =========================
-    def fit(self, X, y):
+        self.X = None
+        self.y = None
 
-        # --- clustering ---
-        self.cluster_model.fit(X)
-        self.cluster_labels = self.cluster_model.labels_
+        self.cluster_labels = None
+        self.X_clustered = None
 
-        # adiciona cluster como feature
-        X_aug = X.copy()
-        X_aug["cluster"] = self.cluster_labels
-
-        # --- classification ---
         self.fitted_classifiers = {}
 
-        for name, model in self.classifiers.items():
-            model.fit(X_aug, y)
-            self.fitted_classifiers[name] = model
+    # ==========================================
+    # Fit
+    # ==========================================
+    def fit(self, X):
+
+        """
+        Store the feature table for subsequent analyses.
+
+        Parameters
+        ----------
+        X : pandas.DataFrame
+            Feature matrix.
+
+        Returns
+        -------
+        self
+        """
+
+        self.X = X.copy()
 
         return self
+    # ==========================================
+    # Cluster
+    # ==========================================
+    def cluster(self):
 
-    # =========================
-    # 2. CLUSTERING
-    # =========================
-    def cluster(self, X):
-        return self.cluster_model.predict(X)
+        """
+        Perform clustering using the selected clustering model.
+        """
 
-    # =========================
-    # 3. CLASSIFICATION
-    # =========================
-    def classify(self, X, y_true=None):
+        if self.X is None:
+            raise RuntimeError("Run fit(X) before cluster().")
 
-        X_aug = X.copy()
-        X_aug["cluster"] = self.cluster(X)
+        self.cluster_model.fit(self.X)
+
+        self.cluster_labels = self.cluster_model.labels_
+
+        self.X_clustered = self.X.copy()
+        self.X_clustered["cluster"] = self.cluster_labels
+
+        return self.cluster_labels    
+    # ==========================================
+    # Classify
+    # ==========================================
+    def classify(self, y):
+
+        """
+        Train and evaluate all classifiers.
+        """
+
+        if self.cluster_labels is None:
+            raise RuntimeError(
+                "Run cluster() before classify()."
+            )
+
+        self.y = y
+
+        self.fitted_classifiers = {}
 
         results = {}
 
-        for name, model in self.fitted_classifiers.items():
-            y_pred = model.predict(X_aug)
+        for name, model in self.classifiers.items():
 
-            if self.evaluator and y_true is not None:
+            model.fit(self.X_clustered, y)
+
+            self.fitted_classifiers[name] = model
+
+            if self.evaluator is not None:
+
+                y_pred = model.predict(self.X_clustered)
+
                 results[name] = self.evaluator.compute_classification_metrics(
-                    y_true, y_pred
+                    y,
+                    y_pred,
                 )
-            else:
-                results[name] = y_pred
-
         return results
+    # ==========================================
+    # Regression
+    # ==========================================
+    def regress(self, damage):
 
-    # =========================
-    # 4. REGRESSION
-    # =========================
-    def regress(self, X):
+        """
+        Train the regression model.
+        """
         if self.regressor is None:
-            raise ValueError("Regressor not defined")
+            raise RuntimeError(
+                "No regression model defined."
+            )
+        self.regressor.fit(self.X_clustered, damage)
 
-        return self.regressor.predict(X)
+        prediction = self.regressor.predict(self.X_clustered)
+
+        return prediction
