@@ -37,9 +37,11 @@ class RegressionFactory:
                    'random_state': 42}
         }
         
-        params = default_params.get(model_name, {})
+        # Combinar parâmetros padrão com os fornecidos
+        params = default_params.get(model_name, {}).copy()
         params.update(kwargs)
         
+        # Mapeamento de modelos
         models = {
             'linear': LinearRegression(**params),
             'ridge': Ridge(**params),
@@ -68,4 +70,5 @@ class RegressionFactory:
         return model
 
 # Manter compatibilidade com versão anterior
+# Criar uma instância padrão para SVRModel
 SVRModel = RegressionFactory.get('svr')
