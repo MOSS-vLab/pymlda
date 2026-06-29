@@ -26,7 +26,7 @@ class RegressionFactory:
         """
         # Parâmetros padrão otimizados para SHM
         default_params = {
-            'linear': {},
+            'linear': {},  # <-- NÃO TEM 'kernel'!
             'ridge': {'alpha': 1.0},
             'lasso': {'alpha': 1.0, 'max_iter': 10000},
             'elastic': {'alpha': 1.0, 'l1_ratio': 0.5, 'max_iter': 10000},
@@ -40,6 +40,37 @@ class RegressionFactory:
         # Combinar parâmetros padrão com os fornecidos
         params = default_params.get(model_name, {}).copy()
         params.update(kwargs)
+        
+        # ============================================================
+        # CORREÇÃO: Remover parâmetros inválidos para cada modelo
+        # ============================================================
+        
+        # Para LinearRegression, remover parâmetros que ela não aceita
+        if model_name == 'linear':
+            invalid_params = ['kernel', 'gamma', 'C', 'epsilon', 'n_estimators', 
+                            'max_depth', 'min_samples_split', 'random_state', 'n_jobs',
+                            'learning_rate', 'alpha', 'l1_ratio', 'max_iter']
+            for p in invalid_params:
+                if p in params:
+                    del params[p]
+        
+        # Para Ridge, Lasso, ElasticNet
+        if model_name in ['ridge', 'lasso', 'elastic']:
+            invalid_params = ['kernel', 'gamma', 'C', 'epsilon', 'n_estimators',
+                            'max_depth', 'min_samples_split', 'random_state', 'n_jobs',
+                            'learning_rate']
+            for p in invalid_params:
+                if p in params:
+                    del params[p]
+        
+        # Para SVR
+        if model_name == 'svr':
+            invalid_params = ['n_estimators', 'max_depth', 'min_samples_split',
+                            'random_state', 'n_jobs', 'learning_rate', 'alpha',
+                            'l1_ratio', 'max_iter']
+            for p in invalid_params:
+                if p in params:
+                    del params[p]
         
         # Mapeamento de modelos
         models = {
@@ -70,5 +101,4 @@ class RegressionFactory:
         return model
 
 # Manter compatibilidade com versão anterior
-# Criar uma instância padrão para SVRModel
 SVRModel = RegressionFactory.get('svr')
