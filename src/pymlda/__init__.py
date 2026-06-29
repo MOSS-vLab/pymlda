@@ -1,4 +1,4 @@
-# src/pymlda/__init__.py
+# pymlda/__init__.py
 """
 PyMLDA - Python Machine Learning for Damage Assessment
 Pacote para monitoramento de saúde estrutural (SHM)

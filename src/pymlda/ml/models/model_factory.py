@@ -19,7 +19,14 @@ def get_models(task='classification', **kwargs):
     dict or sklearn model
     """
     if task == 'classification':
-        return ClassifierFactory.get_all()
+        return {
+            'svm': ClassifierFactory.get('svm'),
+            'rf': ClassifierFactory.get('rf'),
+            'knn': ClassifierFactory.get('knn'),
+            'xgb': ClassifierFactory.get('xgb'),
+            'dt': ClassifierFactory.get('dt'),
+            'nb': ClassifierFactory.get('nb')
+        }
     elif task == 'regression':
         return RegressionFactory.get(**kwargs)
     elif task == 'clustering':
@@ -30,10 +37,20 @@ def get_models(task='classification', **kwargs):
 
 # Para compatibilidade com código existente
 def get_classification_models():
-    return ClassifierFactory.get_all()
+    return get_models('classification')
 
 def get_regression_model(model_name='rf', **kwargs):
     return RegressionFactory.get(model_name, **kwargs)
 
 def get_clustering_model(model_name='kmeans', **kwargs):
     return ClusteringFactory.get(model_name, **kwargs)
+
+__all__ = [
+    'get_models',
+    'get_classification_models',
+    'get_regression_model',
+    'get_clustering_model',
+    'ClassifierFactory',
+    'RegressionFactory',
+    'ClusteringFactory'
+]

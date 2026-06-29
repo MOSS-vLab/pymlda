@@ -1,6 +1,6 @@
 # ml/__init__.py
 """
-Módulo de Machine Learning for Damage assessment (MLDA).
+Módulo de Machine Learning para SHM
 """
 
 from .pipeline.ml_pipeline import MLDA
