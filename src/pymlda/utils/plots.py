@@ -107,3 +107,98 @@ def plot_learning_curves(history, title="Curvas de Aprendizado"):
     
     plt.tight_layout()
     plt.show()
+
+# ============================================================
+# DENSITY PLOT
+# ============================================================
+
+def plot_density_by_group(data, group_column, value_column, 
+                          group_names=None, colors=None,
+                          title="Density Plot", save_path=None, figsize=(20, 5)):
+    """
+    Plota densidades de uma variável agrupada por classe.
+    
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        DataFrame com os dados
+    group_column : str
+        Nome da coluna com os grupos
+    value_column : str
+        Nome da coluna com os valores
+    group_names : list, optional
+        Nomes personalizados para os grupos
+    colors : list, optional
+        Cores para os grupos
+    title : str
+        Título do gráfico
+    save_path : str, optional
+        Caminho para salvar a figura
+    figsize : tuple
+        Tamanho da figura (padrão: (20, 5))
+    """
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import numpy as np
+    
+    groups = data[group_column].unique()
+    n_groups = len(groups)
+    
+    if colors is None:
+        colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 
+                  'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray']
+    
+    # Ajustar tamanho da figura automaticamente
+    if figsize is None:
+        figsize = (5 * n_groups, 5)
+    
+    fig, axes = plt.subplots(1, n_groups, figsize=figsize, sharey=True)
+    if n_groups == 1:
+        axes = [axes]
+    
+    for idx, group in enumerate(groups):
+        group_data = data[data[group_column] == group][value_column]
+        color = colors[idx % len(colors)]
+        label = group_names[idx] if group_names and idx < len(group_names) else str(group)
+        
+        if len(group_data) > 1:
+            # KDE plot
+            sns.kdeplot(group_data, ax=axes[idx], color=color, 
+                        label='Estimado', linewidth=3)
+            
+            mean_val = group_data.mean()
+            std_val = group_data.std()
+            
+            # Média
+            axes[idx].axvline(mean_val, color='red', linestyle='--', 
+                             linewidth=3, label=f'Média = {mean_val:.3f}')
+            # ±1 desvio padrão
+            axes[idx].axvline(mean_val - std_val, color='red', linestyle=':', 
+                             linewidth=2, alpha=0.5)
+            axes[idx].axvline(mean_val + std_val, color='red', linestyle=':', 
+                             linewidth=2, alpha=0.5)
+            
+            # Anotações
+            axes[idx].text(0.05, 0.95, f'n = {len(group_data)}', 
+                          transform=axes[idx].transAxes, fontsize=10, 
+                          verticalalignment='top')
+            axes[idx].text(0.05, 0.85, f'μ = {mean_val:.3f}', 
+                          transform=axes[idx].transAxes, fontsize=10, 
+                          verticalalignment='top')
+            axes[idx].text(0.05, 0.75, f'σ = {std_val:.3f}', 
+                          transform=axes[idx].transAxes, fontsize=10, 
+                          verticalalignment='top')
+        
+        axes[idx].set_xlabel('Valor', fontsize=12)
+        axes[idx].set_ylabel('Densidade' if idx == 0 else '', fontsize=12)
+        axes[idx].set_title(label, fontsize=14)
+        axes[idx].legend(fontsize=10)
+        axes[idx].grid(True, alpha=0.3)
+    
+    plt.suptitle(title, fontsize=16)
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight')
+    
+    plt.show()
