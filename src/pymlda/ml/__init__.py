@@ -13,7 +13,7 @@ from .evaluation.validation import cross_validate
 from .evaluation.reports import generate_classification_report
 from .preprocessing.sampling import UnderSampler
 from .preprocessing.feature_selection import FeatureSelector
-from .preprocessing.time_series import TimeSeriesProcessor
+
 
 __all__ = [
     'MLDA',
@@ -25,6 +25,5 @@ __all__ = [
     'cross_validate',
     'generate_classification_report',
     'UnderSampler',
-    'FeatureSelector',
-    'TimeSeriesProcessor'
+    'FeatureSelector'
 ]
